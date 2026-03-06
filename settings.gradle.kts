@@ -1,7 +1,9 @@
-rootProject.name = "Kmpstack"
+rootProject.name = "kmp-stack"
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
 pluginManagement {
+    includeBuild("build-logic")
+
     repositories {
         google {
             mavenContent {
@@ -32,4 +34,5 @@ plugins {
     id("org.gradle.toolchains.foojay-resolver-convention") version "1.0.0"
 }
 
-include(":composeApp")
+include(":app:androidApp")
+include(":app:desktopApp")
