@@ -7,9 +7,6 @@ plugins {
 kotlin {
     sourceSets {
         getByName("jvmMain").dependencies {
-//            implementation(project(":shared"))
-//            implementation(project(":feature:base"))
-//            implementation(project(":feature:home"))
             implementation(compose.desktop.currentOs)
         }
     }

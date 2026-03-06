@@ -1,3 +1,5 @@
+@file:Suppress("UnstableApiUsage") // 加上这一行
+
 rootProject.name = "kmp-stack"
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
@@ -5,13 +7,7 @@ pluginManagement {
     includeBuild("build-logic")
 
     repositories {
-        google {
-            mavenContent {
-                includeGroupAndSubgroups("androidx")
-                includeGroupAndSubgroups("com.android")
-                includeGroupAndSubgroups("com.google")
-            }
-        }
+        google()
         mavenCentral()
         gradlePluginPortal()
     }
@@ -19,13 +15,7 @@ pluginManagement {
 
 dependencyResolutionManagement {
     repositories {
-        google {
-            mavenContent {
-                includeGroupAndSubgroups("androidx")
-                includeGroupAndSubgroups("com.android")
-                includeGroupAndSubgroups("com.google")
-            }
-        }
+        google()
         mavenCentral()
     }
 }
@@ -36,3 +26,5 @@ plugins {
 
 include(":app:androidApp")
 include(":app:desktopApp")
+include(":core:network")
+include(":core:datastore")

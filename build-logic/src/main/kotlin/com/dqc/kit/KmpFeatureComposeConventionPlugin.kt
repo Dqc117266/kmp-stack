@@ -41,7 +41,6 @@ class KmpFeatureComposeConventionPlugin : Plugin<Project> {
             extensions.configure<KotlinMultiplatformExtension> {
                 // 配置 iOS 框架导出 (如果该 Feature 需要独立被 iOS 引用)
                 listOf(
-                    iosX64(),
                     iosArm64(),
                     iosSimulatorArm64()
                 ).forEach { iosTarget ->
