@@ -25,20 +25,9 @@ kotlin {
             implementation(libs.sqldelight.runtime)
             implementation(libs.sqldelight.coroutines.extensions)
 
-            // Ktor client (for type-safe requests)
-            implementation(libs.ktor.client.core)
-            implementation(libs.ktor.client.content.negotiation)
-            implementation(libs.ktor.serialization.kotlinx.json)
-
-            // Kotlinx Serialization
-            implementation(libs.kotlinx.serialization.json)
-
             // Coroutines
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.kotlinx.datetime)
-
-            // DI
-            implementation(libs.koin.core)
         }
 
         androidMain.dependencies {

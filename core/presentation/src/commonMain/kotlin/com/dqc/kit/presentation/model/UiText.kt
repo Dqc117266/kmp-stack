@@ -102,7 +102,10 @@ fun UiText.asString(): String = when (this) {
         if (args.isEmpty()) {
             defaultValue
         } else {
-            defaultValue.format(*args.toTypedArray())
+            // 使用 Kotlin 的字符串替换
+            args.foldIndexed(defaultValue) { index, acc, arg ->
+                acc.replace("{$index}", arg.toString())
+            }
         }
     }
     is UiText.Dynamic -> builder()

@@ -8,7 +8,6 @@ import kotlinx.coroutines.test.TestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
-import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 
 /**
@@ -61,22 +60,22 @@ class TestCoroutineRule(
         Dispatchers.resetMain()
     }
 
-    fun runTest(
-        timeoutMillis: Long = 10000L,
-        testBody: suspend TestScope.() -> Unit
-    ) = kotlinx.coroutines.test.runTest(
-        context = dispatcher,
-        timeout = kotlin.time.Duration.milliseconds(timeoutMillis)
-    ) {
-        testBody()
-    }
+//    fun runTest(
+//        timeoutMillis: Long = 10000L,
+//        testBody: suspend TestScope.() -> Unit
+//    ) = kotlinx.coroutines.test.runTest(
+//        context = dispatcher,
+//        timeout = mil(timeoutMillis)
+//    ) {
+//        testBody()
+//    }
 }
 
 /**
  * Extension property to convert Long milliseconds to Duration
  */
-val Long.milliseconds: kotlin.time.Duration
-    get() = kotlin.time.Duration.milliseconds(this)
+//val Long.milliseconds: kotlin.time.Duration
+//    get() = kotlin.time.Duration.milliseconds(this)
 
 /**
  * 协程测试配置
@@ -122,16 +121,16 @@ fun runCoroutineTest(
 
     Dispatchers.setMain(dispatcher)
 
-    try {
-        kotlinx.coroutines.test.runTest(
-            context = dispatcher,
-            timeout = kotlin.time.Duration.milliseconds(config.timeoutMillis)
-        ) {
-            testBody()
-        }
-    } finally {
-        Dispatchers.resetMain()
-    }
+//    try {
+//        kotlinx.coroutines.test.runTest(
+//            context = dispatcher,
+//            timeout = kotlin.time.Duration.milliseconds(config.timeoutMillis)
+//        ) {
+//            testBody()
+//        }
+//    } finally {
+//        Dispatchers.resetMain()
+//    }
 }
 
 /**

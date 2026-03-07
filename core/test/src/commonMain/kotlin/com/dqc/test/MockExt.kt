@@ -233,9 +233,9 @@ fun <T> createCallbackCollector(): Pair<CallbackCollector<T>, (T) -> Unit> {
 /**
  * 模拟延迟的辅助函数
  */
-fun simulateDelay(millis: Long = 100) {
-    Thread.sleep(millis)
-}
+//fun simulateDelay(millis: Long = 100) {
+//    Thread.sleep(millis)
+//}
 
 /**
  * 创建顺序返回值

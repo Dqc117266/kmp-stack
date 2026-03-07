@@ -14,10 +14,6 @@ kotlin {
             // Turbine for Flow testing
             api(libs.turbine)
 
-            // MockK for mocking (JVM only,但 api 导出用于 JVM 平台)
-            api(libs.mockk)
-            api(libs.mockk.common)
-
             // Koin Test
             api(libs.koin.test)
 
@@ -37,6 +33,10 @@ kotlin {
             // JVM 特定测试库
             api(libs.junit5.api)
             api(libs.junit5.engine)
+
+            // MockK for mocking (JVM only,但 api 导出用于 JVM 平台)
+            api(libs.mockk)
+            api(libs.mockk.common)
         }
     }
 }

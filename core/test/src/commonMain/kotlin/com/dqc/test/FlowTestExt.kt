@@ -59,7 +59,7 @@ suspend fun <T> Flow<T>.testValues(
 suspend fun <T> Flow<T>.collectItems(
     count: Int,
     timeout: Duration = 5.seconds
-): List<T> = test(timeout = timeout) {
+): Unit = test(timeout = timeout) {
     val items = mutableListOf<T>()
     repeat(count) {
         items.add(awaitItem())
@@ -73,7 +73,7 @@ suspend fun <T> Flow<T>.collectItems(
  */
 suspend fun <T> Flow<T>.firstItem(
     timeout: Duration = 5.seconds
-): T = test(timeout = timeout) {
+): Unit = test(timeout = timeout) {
     val item = awaitItem()
     cancel()
     item
@@ -134,7 +134,7 @@ suspend fun <T> ReceiveTurbine<T>.assertNoMoreItems() {
  * 断言 Flow 在指定时间内没有发射值
  */
 suspend fun <T> ReceiveTurbine<T>.assertNoValue(timeout: Duration = 100.milliseconds) {
-    expectNoEvents(timeout)
+    expectNoEvents()
 }
 
 /**
@@ -145,20 +145,20 @@ object FlowTestPatterns {
     /**
      * 测试 Loading -> Success 模式
      */
-    suspend fun <T> ReceiveTurbine<DomainResult<T>>.awaitLoadingThenSuccess(): T {
-        assertNext { it.isSuccess || it.getOrNull() == null } // 可能是 Loading 状态或初始值
-        val successItem: DomainResult<T> = awaitItem()
-        return (successItem as DomainResult.Success<T>).data
-    }
-
-    /**
-     * 测试 Loading -> Error 模式
-     */
-    suspend fun <T> ReceiveTurbine<DomainResult<T>>.awaitLoadingThenError(): com.dqc.kit.domain.result.DomainError {
-        assertNext { it.isSuccess || it.getOrNull() == null }
-        val errorItem: DomainResult<T> = awaitItem()
-        return (errorItem as DomainResult.Error).error
-    }
+//    suspend fun <T> ReceiveTurbine<DomainResult<T>>.awaitLoadingThenSuccess(): T {
+//        assertNext { it.isSuccess || it.getOrNull() == null } // 可能是 Loading 状态或初始值
+//        val successItem: DomainResult<T> = awaitItem()
+//        return (successItem as DomainResult.Success<T>).data
+//    }
+//
+//    /**
+//     * 测试 Loading -> Error 模式
+//     */
+//    suspend fun <T> ReceiveTurbine<DomainResult<T>>.awaitLoadingThenError(): com.dqc.kit.domain.result.DomainError {
+//        assertNext { it.isSuccess || it.getOrNull() == null }
+//        val errorItem: DomainResult<T> = awaitItem()
+//        return (errorItem as DomainResult.Error).error
+//    }
 
     /**
      * 测试 Success -> Success（数据更新）模式

@@ -17,7 +17,7 @@ import kotlinx.datetime.Instant
 /**
  * 将 UserResponse DTO 转换为 UserEntity
  */
-internal fun UserResponse.toDomain(): = UserEntity(
+internal fun UserResponse.toDomain() = UserEntity(
     id = id,
     name = name,
     email = email,

@@ -56,6 +56,7 @@ class KmpComposeLibraryConventionPlugin : Plugin<Project> {
                         implementation(libs.compose.material3)
                         implementation(libs.compose.ui)
                         implementation(libs.compose.components.resources)
+                        implementation(libs.navigation.compose)
 
                         // 跨平台 ViewModel 支持
                         implementation(libs.androidx.lifecycle.viewmodelCompose)

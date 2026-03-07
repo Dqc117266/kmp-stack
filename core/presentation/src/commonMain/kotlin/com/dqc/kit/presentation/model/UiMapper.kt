@@ -131,9 +131,18 @@ object Formatters {
     object FileSizeFormatter : UiFormatter<Long, String> {
         override fun format(input: Long): String {
             return when {
-                input >= 1024 * 1024 * 1024 -> "%.2f GB".format(input / (1024.0 * 1024.0 * 1024.0))
-                input >= 1024 * 1024 -> "%.2f MB".format(input / (1024.0 * 1024.0))
-                input >= 1024 -> "%.2f KB".format(input / 1024.0)
+                input >= 1024 * 1024 * 1024 -> {
+                    val gb = input / (1024.0 * 1024.0 * 1024.0)
+                    "${(gb * 100).toInt() / 100.0} GB"
+                }
+                input >= 1024 * 1024 -> {
+                    val mb = input / (1024.0 * 1024.0)
+                    "${(mb * 100).toInt() / 100.0} MB"
+                }
+                input >= 1024 -> {
+                    val kb = input / 1024.0
+                    "${(kb * 100).toInt() / 100.0} KB"
+                }
                 else -> "$input B"
             }
         }
@@ -146,7 +155,7 @@ object Formatters {
         override fun format(input: Int): String {
             val minutes = input / 60
             val seconds = input % 60
-            return "%02d:%02d".format(minutes, seconds)
+            return "${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}"
         }
     }
 
@@ -164,7 +173,8 @@ object Formatters {
      */
     object PriceFormatter : UiFormatter<Double, String> {
         override fun format(input: Double): String {
-            return "¥%.2f".format(input)
+            val rounded = (input * 100).toInt() / 100.0
+            return "¥$rounded"
         }
     }
 }

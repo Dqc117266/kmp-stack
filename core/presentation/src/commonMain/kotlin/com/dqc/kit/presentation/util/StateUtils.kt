@@ -3,6 +3,10 @@ package com.dqc.kit.presentation.util
 import com.dqc.kit.presentation.base.UiState
 import com.dqc.kit.presentation.model.UiList
 import com.dqc.kit.presentation.model.UiText
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 /**
  * 状态构建器
@@ -113,13 +117,13 @@ object DebounceUtils {
      */
     fun debounce(
         key: String,
-        scope: kotlinx.coroutines.CoroutineScope,
+        scope: CoroutineScope,
         delayMs: Long = 300,
         action: () -> Unit
     ) {
         debounceJobs[key]?.cancel()
         debounceJobs[key] = scope.launch {
-            kotlinx.coroutines.delay(delayMs)
+            delay(delayMs)
             action()
             debounceJobs.remove(key)
         }
@@ -139,11 +143,5 @@ object DebounceUtils {
     fun clearAll() {
         debounceJobs.values.forEach { it.cancel() }
         debounceJobs.clear()
-    }
-
-    private fun kotlinx.coroutines.CoroutineScope.launch(
-        block: suspend kotlinx.coroutines.CoroutineScope.() -> Unit
-    ): kotlinx.coroutines.Job {
-        return kotlinx.coroutines.launch(this.coroutineContext, block = block)
     }
 }
