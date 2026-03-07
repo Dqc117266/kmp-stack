@@ -93,6 +93,7 @@ enum class AppButtonSize {
  * @param trailingIcon 后置图标（可选）
  * @param shape 自定义形状（可选）
  */
+@OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun AppButton(
     text: String,
@@ -189,6 +190,7 @@ fun AppButton(
 /**
  * 应用按钮组件（带 Painter 图标版本）
  */
+@OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun AppButton(
     text: String,

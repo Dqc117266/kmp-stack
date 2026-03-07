@@ -1,7 +1,6 @@
 package com.dqc.kit.ui.res
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.ReadOnlyComposable
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 
@@ -19,7 +18,7 @@ import org.jetbrains.compose.resources.stringResource
  * 示例：
  * ```kotlin
  * // 在 ViewModel 中
- * val errorMessage: UiText = UiText.StringResource(Res.string.error_network)
+ * val errorMessage: UiText = UiText.ResText(Res.string.error_network)
  *
  * // 在 Composable 中
  * Text(text = errorMessage.asString())
@@ -35,7 +34,7 @@ sealed class UiText {
     /**
      * 字符串资源
      */
-    class StringResource(
+    class ResText(
         val res: StringResource,
         vararg val args: Any
     ) : UiText()
@@ -43,7 +42,7 @@ sealed class UiText {
     /**
      * 带格式化参数的字符串资源
      */
-    class StringResourceArgs(
+    class ResTextArgs(
         val res: StringResource,
         val args: List<Any>
     ) : UiText()
@@ -57,12 +56,11 @@ sealed class UiText {
      * 转换为字符串（仅在 Composable 上下文中调用）
      */
     @Composable
-    @ReadOnlyComposable
     fun asString(): String {
         return when (this) {
             is DynamicString -> value
-            is StringResource -> stringResource(res, *args)
-            is StringResourceArgs -> stringResource(res, *args.toTypedArray())
+            is ResText -> stringResource(res, *args)
+            is ResTextArgs -> stringResource(res, *args.toTypedArray())
             is Empty -> ""
         }
     }
@@ -71,12 +69,11 @@ sealed class UiText {
      * 获取字符串或空
      */
     @Composable
-    @ReadOnlyComposable
     fun asStringOrNull(): String? {
         return when (this) {
             is DynamicString -> value.takeIf { it.isNotEmpty() }
-            is StringResource -> stringResource(res, *args)
-            is StringResourceArgs -> stringResource(res, *args.toTypedArray())
+            is ResText -> stringResource(res, *args)
+            is ResTextArgs -> stringResource(res, *args.toTypedArray())
             is Empty -> null
         }
     }
@@ -85,7 +82,6 @@ sealed class UiText {
      * 如果为空则返回默认值
      */
     @Composable
-    @ReadOnlyComposable
     fun asStringOrDefault(default: String): String {
         return asStringOrNull() ?: default
     }
@@ -105,13 +101,13 @@ sealed class UiText {
          * 创建字符串资源
          */
         fun of(res: StringResource, vararg args: Any): UiText =
-            StringResource(res, *args)
+            ResText(res, *args)
 
         /**
          * 创建带格式化参数的字符串资源
          */
         fun of(res: StringResource, args: List<Any>): UiText =
-            StringResourceArgs(res, args)
+            ResTextArgs(res, args)
 
         /**
          * 创建可选文本（如果为 null 则返回 Empty）

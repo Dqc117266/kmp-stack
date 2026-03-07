@@ -47,7 +47,7 @@ enum class WindowSizeClass {
     /**
      * 是否为扩展模式（大平板/桌面）
      */
-    val isExpanded: Boolean get() == this == EXPANDED
+    val isExpanded: Boolean get() = this == EXPANDED
 
     /**
      * 是否至少为中等尺寸
@@ -167,20 +167,18 @@ fun rememberWindowSizeInfo(): WindowSizeInfo {
  * @param expanded 扩展尺寸执行块
  */
 @Composable
-inline fun <T> rememberByWindowSize(
-    crossinline compact: @Composable () -> T,
-    crossinline medium: @Composable () -> T,
-    crossinline expanded: @Composable () -> T
+fun <T> rememberByWindowSize(
+    compact: @Composable () -> T,
+    medium: @Composable () -> T,
+    expanded: @Composable () -> T
 ): T {
     val windowSizeClass = rememberWindowSizeClass()
 
-    return remember(windowSizeClass) {
-        when (windowSizeClass) {
-            WindowSizeClass.COMPACT -> compact
-            WindowSizeClass.MEDIUM -> medium
-            WindowSizeClass.EXPANDED -> expanded
-        }
-    }()
+    return when (windowSizeClass) {
+        WindowSizeClass.COMPACT -> compact()
+        WindowSizeClass.MEDIUM -> medium()
+        WindowSizeClass.EXPANDED -> expanded()
+    }
 }
 
 /**

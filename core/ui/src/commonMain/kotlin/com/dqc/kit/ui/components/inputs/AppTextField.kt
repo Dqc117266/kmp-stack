@@ -10,8 +10,16 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CornerBasedShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -28,7 +36,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -115,7 +123,7 @@ fun AppTextField(
     enabled: Boolean = true,
     readOnly: Boolean = false,
     showClearButton: Boolean = true,
-    shape: Shape? = null
+    shape: CornerBasedShape? = null
 ) {
     val isError = errorMessage != null
     val fieldShape = shape ?: when (variant) {
@@ -173,7 +181,7 @@ fun AppTextField(
                         modifier = Modifier.size(getTextFieldIconSize(size) + 8.dp)
                     ) {
                         Icon(
-                            imageVector = androidx.compose.material.icons.Icons.Default.Clear,
+                            imageVector = Icons.Default.Clear,
                             contentDescription = "Clear",
                             modifier = Modifier.size(getTextFieldIconSize(size)),
                             tint = AppTheme.colors.onSurfaceVariant
@@ -311,9 +319,9 @@ private fun PasswordVisibilityToggle(
     ) {
         Icon(
             imageVector = if (visible) {
-                androidx.compose.material.icons.Icons.Default.Visibility
+                Icons.Default.Visibility
             } else {
-                androidx.compose.material.icons.Icons.Default.VisibilityOff
+                Icons.Default.VisibilityOff
             },
             contentDescription = if (visible) "Hide password" else "Show password",
             modifier = Modifier.size(getTextFieldIconSize(size)),
@@ -433,7 +441,7 @@ fun AppSearchField(
         variant = AppTextFieldVariant.OUTLINED,
         size = AppTextFieldSize.MEDIUM,
         placeholder = placeholder,
-        leadingIcon = androidx.compose.material.icons.Icons.Default.Search,
+        leadingIcon = Icons.Default.Search,
         keyboardOptions = KeyboardOptions(
             imeAction = ImeAction.Search
         ),
@@ -463,7 +471,7 @@ fun AppEmailField(
         variant = AppTextFieldVariant.OUTLINED,
         label = label,
         errorMessage = errorMessage,
-        leadingIcon = androidx.compose.material.icons.Icons.Default.Email,
+        leadingIcon = Icons.Default.Email,
         keyboardOptions = KeyboardOptions(
             keyboardType = KeyboardType.Email,
             imeAction = ImeAction.Next
@@ -492,7 +500,7 @@ fun AppPasswordField(
         variant = AppTextFieldVariant.OUTLINED,
         label = label,
         errorMessage = errorMessage,
-        leadingIcon = androidx.compose.material.icons.Icons.Default.Lock,
+        leadingIcon = Icons.Default.Lock,
         isPassword = true,
         keyboardOptions = KeyboardOptions(
             keyboardType = KeyboardType.Password,
