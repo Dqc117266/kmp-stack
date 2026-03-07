@@ -1,0 +1,117 @@
+import kotlinx.datetime.Instant
+
+CREATE TABLE ProjectEntity (
+    id TEXT PRIMARY KEY NOT NULL,
+    name TEXT NOT NULL,
+    description TEXT,
+    ownerId TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'active',
+    createdAt INTEGER NOT NULL,
+    updatedAt INTEGER NOT NULL,
+    FOREIGN KEY (ownerId) REFERENCES UserEntity(id) ON DELETE CASCADE
+);
+
+CREATE INDEX index_project_owner ON ProjectEntity(ownerId);
+CREATE INDEX index_project_status ON ProjectEntity(status);
+
+-- 用户-项目关联表（多对多关系）
+CREATE TABLE UserProjectCrossRef (
+    userId TEXT NOT NULL,
+    projectId TEXT NOT NULL,
+    role TEXT NOT NULL DEFAULT 'member',
+    joinedAt INTEGER NOT NULL,
+    PRIMARY KEY (userId, projectId),
+    FOREIGN KEY (userId) REFERENCES UserEntity(id) ON DELETE CASCADE,
+    FOREIGN KEY (projectId) REFERENCES ProjectEntity(id) ON DELETE CASCADE
+);
+
+CREATE INDEX index_crossref_user ON UserProjectCrossRef(userId);
+CREATE INDEX index_crossref_project ON UserProjectCrossRef(projectId);
+
+-- 基本 CRUD 操作
+selectAllProjects:
+SELECT * FROM ProjectEntity;
+
+selectProjectById:
+SELECT * FROM ProjectEntity WHERE id = ?;
+
+selectProjectsByOwner:
+SELECT * FROM ProjectEntity WHERE ownerId = ?;
+
+selectProjectsByStatus:
+SELECT * FROM ProjectEntity WHERE status = ?;
+
+insertProject:
+INSERT INTO ProjectEntity (id, name, description, ownerId, status, createdAt, updatedAt)
+VALUES (?, ?, ?, ?, ?, ?, ?);
+
+updateProject:
+UPDATE ProjectEntity SET
+    name = ?,
+    description = ?,
+    ownerId = ?,
+    status = ?,
+    updatedAt = ?
+WHERE id = ?;
+
+deleteProject:
+DELETE FROM ProjectEntity WHERE id = ?;
+
+-- 关联查询
+selectProjectsWithMembers:
+SELECT 
+    p.*,
+    u.id AS user_id,
+    u.username AS user_username,
+    u.email AS user_email,
+    u.avatarUrl AS user_avatarUrl,
+    u.createdAt AS user_createdAt,
+    u.updatedAt AS user_updatedAt,
+    up.role AS member_role,
+    up.joinedAt AS member_joinedAt
+FROM ProjectEntity p
+LEFT JOIN UserProjectCrossRef up ON p.id = up.projectId
+LEFT JOIN UserEntity u ON up.userId = u.id
+WHERE p.id = ?;
+
+selectUsersByProject:
+SELECT 
+    u.*,
+    up.role AS member_role,
+    up.joinedAt AS member_joinedAt
+FROM UserEntity u
+INNER JOIN UserProjectCrossRef up ON u.id = up.userId
+WHERE up.projectId = ?;
+
+selectProjectsByUser:
+SELECT 
+    p.*,
+    up.role AS member_role,
+    up.joinedAt AS member_joinedAt
+FROM ProjectEntity p
+INNER JOIN UserProjectCrossRef up ON p.id = up.projectId
+WHERE up.userId = ?;
+
+-- 关联表操作
+insertUserToProject:
+INSERT OR REPLACE INTO UserProjectCrossRef (userId, projectId, role, joinedAt)
+VALUES (?, ?, ?, ?);
+
+removeUserFromProject:
+DELETE FROM UserProjectCrossRef WHERE userId = ? AND projectId = ?;
+
+updateUserRole:
+UPDATE UserProjectCrossRef SET role = ? WHERE userId = ? AND projectId = ?;
+
+selectProjectMembers:
+SELECT 
+    u.id,
+    u.username,
+    u.email,
+    u.avatarUrl,
+    up.role,
+    up.joinedAt
+FROM UserEntity u
+INNER JOIN UserProjectCrossRef up ON u.id = up.userId
+WHERE up.projectId = ?
+ORDER BY up.joinedAt ASC;

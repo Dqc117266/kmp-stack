@@ -26,5 +26,11 @@ plugins {
 
 include(":app:androidApp")
 include(":app:desktopApp")
-include(":core:network")
+include(":core:common")
+include(":core:data")
+include(":core:domain")
 include(":core:datastore")
+include(":core:network")
+include(":core:database")
+include(":core:logging")
+include(":core:test")

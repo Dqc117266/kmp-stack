@@ -5,8 +5,9 @@ plugins {
 kotlin {
     sourceSets {
         commonMain.dependencies {
-            // Coroutines
-            implementation(libs.kotlinx.coroutines.core)
+            // Common module for shared utilities
+            api(projects.core.common)
+            
             implementation(libs.androidx.datastore.core)
             implementation(libs.androidx.datastore.preferences)
         }

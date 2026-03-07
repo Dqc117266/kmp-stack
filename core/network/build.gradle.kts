@@ -5,6 +5,12 @@ plugins {
 kotlin {
     sourceSets {
         commonMain.dependencies {
+            // Common module for shared utilities
+            api(projects.core.common)
+            
+            // DataStore module for token persistence
+            implementation(projects.core.datastore)
+            
             // Ktor
             implementation(libs.ktor.client.core)
             implementation(libs.ktor.client.content.negotiation)
@@ -12,8 +18,7 @@ kotlin {
             implementation(libs.ktor.client.logging)
             implementation(libs.ktor.client.serialization)
             
-            // Kotlinx
-            implementation(libs.kotlinx.coroutines.core)
+            // Kotlinx (inherited from core:common)
             implementation(libs.kotlinx.serialization.json)
         }
 

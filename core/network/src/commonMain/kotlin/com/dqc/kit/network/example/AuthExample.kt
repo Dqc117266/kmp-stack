@@ -2,7 +2,7 @@ package com.dqc.kit.network.example
 
 import com.dqc.kit.network.auth.AuthManager
 import com.dqc.kit.network.data.NetworkResult
-import com.dqc.kit.network.data.repository.BaseRepository
+import com.dqc.kit.network.data.util.safeApiCall
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get
@@ -54,12 +54,11 @@ class AuthApi(private val client: HttpClient) {
 }
 
 /**
- * Example: Production-ready AuthManager
+ * Example: Production-ready AuthManager wrapper
  */
 class ProductionAuthManager : KoinComponent {
     
     private val client: HttpClient by inject()
-    private val authApi = AuthApi(client)
     private val authManager: AuthManager by inject()
     
     /**
@@ -67,6 +66,7 @@ class ProductionAuthManager : KoinComponent {
      */
     suspend fun login(username: String, password: String): NetworkResult<UserDto> {
         return try {
+            val authApi = AuthApi(client)
             val response = authApi.login(LoginRequest(username, password))
             authManager.loginWithTokens(response.accessToken, response.refreshToken)
             NetworkResult.Success(response.user)
@@ -80,6 +80,7 @@ class ProductionAuthManager : KoinComponent {
      */
     suspend fun refreshToken(refreshToken: String): NetworkResult<String> {
         return try {
+            val authApi = AuthApi(client)
             val response = authApi.refreshToken(refreshToken)
             authManager.loginWithTokens(response.accessToken, refreshToken)
             NetworkResult.Success(response.accessToken)
@@ -93,6 +94,7 @@ class ProductionAuthManager : KoinComponent {
      */
     suspend fun logout(): NetworkResult<Unit> {
         return try {
+            val authApi = AuthApi(client)
             authApi.logout()
             authManager.logout()
             NetworkResult.Success(Unit)
@@ -107,7 +109,7 @@ class ProductionAuthManager : KoinComponent {
 /**
  * Example: Protected API with automatic auth
  */
-class ProtectedRepository : BaseRepository(), KoinComponent {
+class ProtectedRepository : KoinComponent {
     
     private val client: HttpClient by inject()
     
@@ -115,15 +117,15 @@ class ProtectedRepository : BaseRepository(), KoinComponent {
      * This request automatically includes Authorization header
      * Token refresh is handled automatically on 401
      */
-    suspend fun getUserProfile() = safeApiCall {
+    suspend fun getUserProfile(): NetworkResult<UserDto> = safeApiCall {
         client.get("user/profile").body<UserDto>()
     }
     
-    suspend fun getDashboard() = safeApiCall {
+    suspend fun getDashboard(): NetworkResult<DashboardDto> = safeApiCall {
         client.get("dashboard").body<DashboardDto>()
     }
     
-    suspend fun updateProfile(name: String, email: String) = safeApiCall {
+    suspend fun updateProfile(name: String, email: String): NetworkResult<UserDto> = safeApiCall {
         client.post("user/profile") {
             setBody(mapOf("name" to name, "email" to email))
         }.body<UserDto>()
