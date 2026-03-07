@@ -9,10 +9,6 @@ kotlin {
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.androidx.datastore.core)
             implementation(libs.androidx.datastore.preferences)
-
         }
-//        androidMain.dependencies {
-//            implementation(libs.androidx.datastore.preferences)
-//        }
     }
 }

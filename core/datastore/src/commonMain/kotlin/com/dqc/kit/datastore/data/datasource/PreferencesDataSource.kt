@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.Flow
  */
 internal interface PreferencesDataSource {
     suspend fun getString(key: String, defaultValue: String): String
-    suspend fun getStringFlow(key: String, defaultValue: String): Flow<String>
+    fun getStringFlow(key: String, defaultValue: String): Flow<String>
     suspend fun putString(key: String, value: String)
     
     suspend fun getInt(key: String, defaultValue: Int): Int

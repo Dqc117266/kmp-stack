@@ -3,9 +3,6 @@ package com.dqc.kit.datastore.data.datasource
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import java.io.File
-import java.io.ObjectInputStream
-import java.io.ObjectOutputStream
 import java.util.prefs.Preferences
 
 /**
@@ -24,8 +21,8 @@ internal class JvmPreferencesDataSource(
         return preferences.get(key, defaultValue)
     }
     
-    override suspend fun getStringFlow(key: String, defaultValue: String): Flow<String> {
-        return getOrCreateFlow(key, getString(key, defaultValue)).asStateFlow() as Flow<String>
+    override fun getStringFlow(key: String, defaultValue: String): Flow<String> {
+        return getOrCreateFlow(key, preferences.get(key, defaultValue)).asStateFlow() as Flow<String>
     }
     
     override suspend fun putString(key: String, value: String) {
@@ -40,7 +37,7 @@ internal class JvmPreferencesDataSource(
     }
     
     override fun getIntFlow(key: String, defaultValue: Int): Flow<Int> {
-        return getOrCreateFlow(key, getInt(key, defaultValue)).asStateFlow() as Flow<Int>
+        return getOrCreateFlow(key, preferences.getInt(key, defaultValue)).asStateFlow() as Flow<Int>
     }
     
     override suspend fun putInt(key: String, value: Int) {
@@ -55,7 +52,7 @@ internal class JvmPreferencesDataSource(
     }
     
     override fun getLongFlow(key: String, defaultValue: Long): Flow<Long> {
-        return getOrCreateFlow(key, getLong(key, defaultValue)).asStateFlow() as Flow<Long>
+        return getOrCreateFlow(key, preferences.getLong(key, defaultValue)).asStateFlow() as Flow<Long>
     }
     
     override suspend fun putLong(key: String, value: Long) {
@@ -70,7 +67,7 @@ internal class JvmPreferencesDataSource(
     }
     
     override fun getBooleanFlow(key: String, defaultValue: Boolean): Flow<Boolean> {
-        return getOrCreateFlow(key, getBoolean(key, defaultValue)).asStateFlow() as Flow<Boolean>
+        return getOrCreateFlow(key, preferences.getBoolean(key, defaultValue)).asStateFlow() as Flow<Boolean>
     }
     
     override suspend fun putBoolean(key: String, value: Boolean) {
@@ -85,7 +82,7 @@ internal class JvmPreferencesDataSource(
     }
     
     override fun getFloatFlow(key: String, defaultValue: Float): Flow<Float> {
-        return getOrCreateFlow(key, getFloat(key, defaultValue)).asStateFlow() as Flow<Float>
+        return getOrCreateFlow(key, preferences.getFloat(key, defaultValue)).asStateFlow() as Flow<Float>
     }
     
     override suspend fun putFloat(key: String, value: Float) {
@@ -100,7 +97,7 @@ internal class JvmPreferencesDataSource(
     }
     
     override fun getDoubleFlow(key: String, defaultValue: Double): Flow<Double> {
-        return getOrCreateFlow(key, getDouble(key, defaultValue)).asStateFlow() as Flow<Double>
+        return getOrCreateFlow(key, preferences.getDouble(key, defaultValue)).asStateFlow() as Flow<Double>
     }
     
     override suspend fun putDouble(key: String, value: Double) {

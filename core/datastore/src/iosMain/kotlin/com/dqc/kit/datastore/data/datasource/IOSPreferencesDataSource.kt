@@ -20,7 +20,7 @@ internal class IOSPreferencesDataSource : PreferencesDataSource {
     }
     
     override fun getStringFlow(key: String, defaultValue: String): Flow<String> {
-        return getOrCreateFlow(key, getString(key, defaultValue)).asStateFlow() as Flow<String>
+        return getOrCreateFlow(key, defaults.stringForKey(key) ?: defaultValue).asStateFlow() as Flow<String>
     }
     
     override suspend fun putString(key: String, value: String) {
@@ -36,7 +36,10 @@ internal class IOSPreferencesDataSource : PreferencesDataSource {
     }
     
     override fun getIntFlow(key: String, defaultValue: Int): Flow<Int> {
-        return getOrCreateFlow(key, getInt(key, defaultValue)).asStateFlow() as Flow<Int>
+        val value = if (defaults.objectForKey(key) != null) {
+            defaults.integerForKey(key).toInt()
+        } else defaultValue
+        return getOrCreateFlow(key, value).asStateFlow() as Flow<Int>
     }
     
     override suspend fun putInt(key: String, value: Int) {
@@ -52,7 +55,10 @@ internal class IOSPreferencesDataSource : PreferencesDataSource {
     }
     
     override fun getLongFlow(key: String, defaultValue: Long): Flow<Long> {
-        return getOrCreateFlow(key, getLong(key, defaultValue)).asStateFlow() as Flow<Long>
+        val value = if (defaults.objectForKey(key) != null) {
+            defaults.integerForKey(key)
+        } else defaultValue
+        return getOrCreateFlow(key, value).asStateFlow() as Flow<Long>
     }
     
     override suspend fun putLong(key: String, value: Long) {
@@ -68,7 +74,10 @@ internal class IOSPreferencesDataSource : PreferencesDataSource {
     }
     
     override fun getBooleanFlow(key: String, defaultValue: Boolean): Flow<Boolean> {
-        return getOrCreateFlow(key, getBoolean(key, defaultValue)).asStateFlow() as Flow<Boolean>
+        val value = if (defaults.objectForKey(key) != null) {
+            defaults.boolForKey(key)
+        } else defaultValue
+        return getOrCreateFlow(key, value).asStateFlow() as Flow<Boolean>
     }
     
     override suspend fun putBoolean(key: String, value: Boolean) {
@@ -84,7 +93,10 @@ internal class IOSPreferencesDataSource : PreferencesDataSource {
     }
     
     override fun getFloatFlow(key: String, defaultValue: Float): Flow<Float> {
-        return getOrCreateFlow(key, getFloat(key, defaultValue)).asStateFlow() as Flow<Float>
+        val value = if (defaults.objectForKey(key) != null) {
+            defaults.floatForKey(key)
+        } else defaultValue
+        return getOrCreateFlow(key, value).asStateFlow() as Flow<Float>
     }
     
     override suspend fun putFloat(key: String, value: Float) {
@@ -100,7 +112,10 @@ internal class IOSPreferencesDataSource : PreferencesDataSource {
     }
     
     override fun getDoubleFlow(key: String, defaultValue: Double): Flow<Double> {
-        return getOrCreateFlow(key, getDouble(key, defaultValue)).asStateFlow() as Flow<Double>
+        val value = if (defaults.objectForKey(key) != null) {
+            defaults.doubleForKey(key)
+        } else defaultValue
+        return getOrCreateFlow(key, value).asStateFlow() as Flow<Double>
     }
     
     override suspend fun putDouble(key: String, value: Double) {
