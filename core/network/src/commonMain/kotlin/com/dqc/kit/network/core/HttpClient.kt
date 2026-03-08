@@ -12,6 +12,7 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
+import kotlinx.io.IOException
 
 /**
  * Creates and configures HttpClient with authentication support
@@ -23,13 +24,11 @@ fun createHttpClient(
     tokenProvider: TokenProvider? = null
 ): HttpClient = HttpClient(engine) {
 
-    // ... 保留 Timeout, ContentNegotiation, Logging ...
-
     // 1. 移除针对 401 的 HttpRequestRetry
     // 只有在网络抖动时才需要 retry，授权失败不需要在此处理
     install(HttpRequestRetry) {
         maxRetries = 1
-        retryOnExceptionIf { _, cause -> cause is io.ktor.utils.io.errors.IOException }
+        retryOnExceptionIf { _, cause -> cause is IOException }
     }
 
     defaultRequest {

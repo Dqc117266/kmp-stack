@@ -1,7 +1,5 @@
 plugins {
     id("com.dqc.kit.convention.kmp.library")
-    // 注意：此模块不配置 sqldelight 插件，因为不生成数据库
-    // 其他模块在自己的 build.gradle.kts 中配置 sqldelight 插件
 }
 
 kotlin {

@@ -1,256 +1,239 @@
-# core:data 模块使用指南
+# Core Data 模块
 
-## 概述
+**数据层基础设施模块**，提供基础的数据访问能力，**不包含任何具体业务逻辑**。
 
-`core:data` 是整个架构的数据基础设施层，负责：
-- 网络数据获取（通过 Ktor）
-- 本地数据缓存（通过 SQLDelight）
-- DTO 到领域实体的转换
-- 统一错误处理
+## 模块职责
 
-## 架构原则
+| 职责 | 说明 |
+|------|------|
+| ✅ 网络请求工具 | `NetworkResultExt` 提供通用的 HTTP 请求封装 |
+| ✅ 错误处理 | `ErrorMapper` 统一映射异常到 DomainError |
+| ✅ 数据源基类 | `BaseRemoteDataSource`, `BaseLocalDataSource` |
+| ✅ 基础 DTO | `BaseResponse`, `PaginatedResponse` 通用响应结构 |
+| ❌ **业务 Repository** | 由 Feature 模块自行实现 |
+| ❌ **数据库表定义** | 由 Feature 模块自行配置 SQLDelight |
+| ❌ **业务 DTO/Mapper** | 由 Feature 模块自行定义 |
 
-### 1. 单向数据流
+## 架构定位
+
 ```
-[Remote API] → [DTO] → [Mapper] → [Entity] → [Repository] → [Domain Layer]
-                    ↓
-[Local DB] ←─────[Cache] ←─────────────┘
+┌─────────────────────────────────────────────────────────────┐
+│                    Feature 模块                              │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐      │
+│  │ MyRepository │  │  MyDataSource │  │  MyDatabase  │      │
+│  │ (业务实现)    │  │  (业务实现)    │  │  (SQLDelight)│      │
+│  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘      │
+└─────────┼─────────────────┼─────────────────┼──────────────┘
+          │                 │                 │
+          │ extends         │ extends         │ uses
+          ▼                 ▼                 ▼
+┌─────────────────────────────────────────────────────────────┐
+│                    Core Data 模块                           │
+│  ┌────────────────────┐  ┌────────────────────┐            │
+│  │ BaseRemoteDataSource│  │ BaseLocalDataSource │            │
+│  │ ErrorMapper         │  │ NetworkResultExt    │            │
+│  │ BaseResponse        │  │                     │            │
+│  └────────────────────┘  └────────────────────┘            │
+└─────────────────────────────────────────────────────────────┘
 ```
 
-### 2. 严格的分层边界
-- **DTO (Data Transfer Object)**: 仅模块内部可见 (`internal`)
-- **Entity**: 来自 `core:domain`，纯净的业务模型
-- **Mapper**: 负责 DTO → Entity 的转换
+## 提供给 Feature 模块的工具
 
-## 依赖注入配置
+### 1. BaseRemoteDataSource
 
-### Android
 ```kotlin
-// Application.kt
-startKoin {
-    androidContext(this@MyApplication)
-    modules(
-        // 平台特定模块
-        androidDataStoreModule(),  // 来自 core:datastore
-        androidDataModule(),       // 来自 core:data
-
-        // 核心模块
-        coreNetworkModule(
-            baseUrl = "https://api.example.com",
-            isDebug = BuildConfig.DEBUG
-        ),
-        coreDataModule(basePath = "/api/v1"),
-
-        // 应用模块
-        appModule
-    )
+// Feature 模块创建自己的 RemoteDataSource
+internal class UserRemoteDataSource(
+    httpClient: HttpClient
+) : BaseRemoteDataSource(httpClient, "/api/v1") {
+    
+    suspend fun getUser(id: String): DomainResult<UserDto> = 
+        httpClient.executeAndMap {
+            get(buildUrl("/users/$id"))
+        }
 }
 ```
 
-### iOS
-```kotlin
-// 在 iOS 主入口初始化
-fun initKoin() = startKoin {
-    modules(
-        iosDataStoreModule(),
-        iosDataModule(),
-        coreNetworkModule(
-            baseUrl = "https://api.example.com",
-            isDebug = false
-        ),
-        coreDataModule(basePath = "/api/v1")
-    )
-}
-```
+### 2. BaseLocalDataSource
 
-### JVM (Desktop)
 ```kotlin
-// Desktop App
-fun main() = application {
-    startKoin {
-        modules(
-            jvmDataStoreModule(),
-            jvmDataModule(),
-            coreNetworkModule(
-                baseUrl = "https://api.example.com",
-                isDebug = true
-            ),
-            coreDataModule(basePath = "/api/v1")
-        )
+// Feature 模块创建自己的 LocalDataSource
+internal class UserLocalDataSource(
+    database: UserDatabase  // Feature 自己生成的 SQLDelight 数据库
+) : BaseLocalDataSource<UserDatabase>(database) {
+    
+    suspend fun saveUser(user: UserEntity) {
+        // 使用 database 执行 SQLDelight 查询
     }
-    // ...
 }
 ```
 
-## 使用 Repository
+### 3. 网络请求扩展
 
 ```kotlin
-class LoginViewModel(
-    private val userRepository: UserRepository
-) : ViewModel() {
+// executeAndMap 自动处理 BaseResponse 包装和错误映射
+val result: DomainResult<UserDto> = httpClient.executeAndMap {
+    get("/api/users/123")
+}
+```
 
-    fun login(username: String, password: String) {
-        viewModelScope.launch {
-            when (val result = userRepository.login(username, password)) {
-                is DomainResult.Success -> {
-                    // 登录成功
-                    val session = result.data
-                    println("Welcome ${session.user.name}!")
-                }
-                is DomainResult.Error -> {
-                    // 处理错误
-                    when (result.error) {
-                        is DomainError.Unauthorized -> showError("Invalid credentials")
-                        is DomainError.NetworkError -> showError("No internet connection")
-                        is DomainError.ValidationError -> showError(result.error.message)
-                        else -> showError("Unknown error")
-                    }
-                }
-            }
+### 4. 错误映射
+
+```kotlin
+// ErrorMapper 自动处理 Ktor 异常、网络超时等
+try {
+    val response = httpClient.get("/api/data")
+} catch (e: Throwable) {
+    val domainError = ErrorMapper.map(e)
+    // DomainError.NetworkError / Unauthorized / ValidationError 等
+}
+```
+
+## 在 Feature 模块中完整实现数据层
+
+```kotlin
+// ===== feature/user/build.gradle.kts =====
+plugins {
+    id("com.dqc.kit.convention.kmp.library")
+    alias(libs.plugins.sqldelight)  // Feature 模块自己配置 SQLDelight
+}
+
+sqldelight {
+    databases {
+        create("UserDatabase") {
+            packageName.set("com.dqc.kit.feature.user.data")
         }
     }
 }
-```
 
-## Repository 接口
-
-### UserRepository
-
-```kotlin
-interface UserRepository {
-    // 登录/注册
-    suspend fun login(username: String, password: String): DomainResult<UserSessionEntity>
-    suspend fun register(username: String, email: String, password: String): DomainResult<UserEntity>
-
-    // 用户信息
-    suspend fun getCurrentUser(): DomainResult<UserEntity>
-    fun observeCurrentUser(): Flow<UserEntity>
-    suspend fun getUserById(userId: String): DomainResult<UserEntity>
-    suspend fun updateUser(user: UserEntity): DomainResult<UserEntity>
-
-    // 认证管理
-    suspend fun refreshToken(): DomainResult<String>
-    suspend fun logout(): DomainResult<Unit>
-    suspend fun isLoggedIn(): Boolean
-}
-```
-
-## 错误处理
-
-```kotlin
-// DomainResult 提供丰富的处理函数
-userRepository.getCurrentUser()
-    .onSuccess { user ->
-        updateUI(user)
-    }
-    .onError { error ->
-        when (error) {
-            is DomainError.Unauthorized -> navigateToLogin()
-            is DomainError.NetworkError -> showRetryButton()
-            else -> showError(error.message)
-        }
-    }
-    .recover { error ->
-        // 返回默认值
-        UserEntity.empty()
-    }
-```
-
-## 扩展新的数据源
-
-### 1. 创建 DTO
-```kotlin
-// network/dto/ProductDto.kt
-@Serializable
-internal data class ProductResponse(
-    @SerialName("id") val id: String,
-    @SerialName("name") val name: String,
-    @SerialName("price") val price: Double
-)
-```
-
-### 2. 创建 Mapper
-```kotlin
-// network/mapper/ProductMapper.kt
-internal fun ProductResponse.toDomain(): ProductEntity = ProductEntity(
-    id = id,
-    name = name,
-    price = price
-)
-```
-
-### 3. 创建 Remote DataSource
-```kotlin
-// network/datasource/ProductRemoteDataSource.kt
-internal class ProductRemoteDataSource(
-    private val httpClient: HttpClient
-) {
-    suspend fun getProducts(): DomainResult<List<ProductResponse>> {
-        return httpClient.executeAndMap {
-            get("/api/v1/products")
-        }
-    }
-}
-```
-
-### 4. 创建 Local DataSource (可选)
-```kotlin
-// local/datasource/ProductLocalDataSource.kt
-internal class ProductLocalDataSource(database: AppDatabase) {
-    // 实现缓存逻辑
-}
-```
-
-### 5. 创建 Repository 实现
-```kotlin
-// repository/ProductRepositoryImpl.kt
-internal class ProductRepositoryImpl(
-    private val remote: ProductRemoteDataSource,
-    private val local: ProductLocalDataSource
-) : ProductRepository {
-    override suspend fun getProducts(): DomainResult<List<ProductEntity>> {
-        return remote.getProducts().map { list ->
-            list.map { it.toDomain() }
-        }.onSuccess { list ->
-            local.saveProducts(list) // 缓存
-        }
-    }
-}
-```
-
-### 6. 注册到 DI
-```kotlin
-// di/DataModule.kt
-single { ProductRemoteDataSource(get()) }
-single { ProductLocalDataSource(get()) }
-single<ProductRepository> { ProductRepositoryImpl(get(), get()) }
-```
-
-## 数据库 Schema
-
-数据库 Schema 位于 `src/commonMain/sqldelight/com/dqc/kit/data/local/database/` 目录。
-
-### 添加新表
-创建 `.sq` 文件，例如 `product.sq`:
-```sql
-CREATE TABLE product (
+// ===== feature/user/src/commonMain/sqldelight/com/dqc/kit/feature/user/data/user.sq =====
+CREATE TABLE user (
     id TEXT PRIMARY KEY NOT NULL,
     name TEXT NOT NULL,
-    price REAL NOT NULL,
-    created_at INTEGER NOT NULL
+    email TEXT NOT NULL
 );
 
-selectAll:
-SELECT * FROM product;
+selectById:
+SELECT * FROM user WHERE id = ?;
 
 insertOrReplace:
-INSERT OR REPLACE INTO product (id, name, price, created_at)
-VALUES (?, ?, ?, ?);
+INSERT OR REPLACE INTO user (id, name, email)
+VALUES (?, ?, ?);
+
+// ===== feature/user/src/commonMain/kotlin/data/dto/UserDto.kt =====
+@Serializable
+internal data class UserDto(
+    @SerialName("id") val id: String,
+    @SerialName("name") val name: String,
+    @SerialName("email") val email: String
+)
+
+// ===== feature/user/src/commonMain/kotlin/data/mapper/UserMapper.kt =====
+internal fun UserDto.toDomain(): User = User(id, name, email)
+internal fun UserEntity.toDomain(): User = User(id, name, email)
+
+// ===== feature/user/src/commonMain/kotlin/data/remote/UserRemoteDataSource.kt =====
+internal class UserRemoteDataSource(
+    httpClient: HttpClient
+) : BaseRemoteDataSource(httpClient, "/api/v1") {
+    
+    suspend fun getUser(id: String): DomainResult<UserDto> = 
+        httpClient.executeAndMap {
+            get(buildUrl("/users/$id"))
+        }
+}
+
+// ===== feature/user/src/commonMain/kotlin/data/local/UserLocalDataSource.kt =====
+internal class UserLocalDataSource(
+    database: UserDatabase
+) : BaseLocalDataSource<UserDatabase>(database) {
+    
+    private val queries = database.userQueries
+    
+    suspend fun saveUser(user: UserEntity) = withContext(Dispatchers.Default) {
+        queries.insertOrReplace(user.id, user.name, user.email)
+    }
+    
+    suspend fun getUser(id: String): UserEntity? = withContext(Dispatchers.Default) {
+        queries.selectById(id).executeAsOneOrNull()?.toEntity()
+    }
+}
+
+// ===== feature/user/src/commonMain/kotlin/data/repository/UserRepositoryImpl.kt =====
+internal class UserRepositoryImpl(
+    private val remote: UserRemoteDataSource,
+    private val local: UserLocalDataSource
+) : UserRepository {
+    
+    override suspend fun getUser(id: String): DomainResult<User> {
+        // 1. 尝试本地获取
+        local.getUser(id)?.let {
+            return DomainResult.Success(it.toDomain())
+        }
+        
+        // 2. 从网络获取
+        return when (val result = remote.getUser(id)) {
+            is DomainResult.Success -> {
+                val user = result.data.toDomain()
+                local.saveUser(result.data.toEntity())  // 缓存
+                DomainResult.Success(user)
+            }
+            is DomainResult.Error -> result
+        }
+    }
+}
+
+// ===== feature/user/src/commonMain/kotlin/di/UserModule.kt =====
+val userModule = module {
+    // 数据库驱动（从 core:data 获取）
+    single { DatabaseDriverFactory(get()) }
+    
+    // SQLDelight 数据库实例
+    single {
+        val driver = get<DatabaseDriverFactory>().createDriver()
+        UserDatabase(driver)
+    }
+    
+    // DataSource
+    single { UserRemoteDataSource(get()) }
+    single { UserLocalDataSource(get()) }
+    
+    // Repository
+    single<UserRepository> { UserRepositoryImpl(get(), get()) }
+}
 ```
 
-## 注意事项
+## 依赖关系
 
-1. **DTO 可见性**: 所有 DTO 必须使用 `internal` 修饰符，避免泄露到模块外部
-2. **错误映射**: 使用 `ErrorMapper` 将底层异常转换为 `DomainError`
-3. **线程安全**: 所有数据库操作使用 `Dispatchers.Default` 调度器
-4. **缓存策略**: Repository 优先返回本地缓存，同时异步更新
+```
+Feature 模块 (如 :feature:user)
+├── implementation(project(":core:data"))      # 基础数据工具
+├── implementation(project(":core:domain"))    # 领域实体和接口
+├── implementation(project(":core:network"))   # HttpClient
+├── implementation(libs.sqldelight.gradle)     # SQLDelight 插件
+└── 自己配置 SQLDelight 数据库和 Repository
+```
+
+## 更新日志
+
+### 2024-03-08 重构
+
+**重大变更：**
+
+- ❌ 移除了 `UserRepository` 和业务相关代码
+- ❌ 移除了 `AppDatabase` 和 `user.sq` 表定义
+- ❌ 移除了 `PlatformDataModule`（Android/iOS/JVM）
+- ✅ 添加了 `BaseRemoteDataSource` 基类
+- ✅ 添加了 `BaseLocalDataSource` 基类
+- ✅ `DataModule` 现在为空模块（仅组织依赖）
+- ✅ 所有业务数据逻辑迁移到 Feature 模块
+
+**迁移指南：**
+
+如果你之前在 core:data 中有业务代码，请迁移到你的 Feature 模块中：
+
+1. 在 Feature 模块的 `build.gradle.kts` 中添加 SQLDelight 插件配置
+2. 创建 `.sq` 文件定义数据库表
+3. 将 Repository、DataSource、DTO、Mapper 移动到 Feature 模块
+4. 在 Feature 模块的 Koin Module 中注册 Repository
+5. 从 Application 的 Koin 初始化中移除 `coreDataModule()` 调用

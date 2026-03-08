@@ -1,0 +1,101 @@
+import kotlinx.datetime.Instant;
+
+-- 食谱表
+CREATE TABLE RecipeEntity (
+    id TEXT PRIMARY KEY NOT NULL,
+    title TEXT NOT NULL,
+    description TEXT,
+    image_url TEXT,
+    cooking_time INTEGER NOT NULL DEFAULT 0,
+    servings INTEGER NOT NULL DEFAULT 1,
+    difficulty TEXT NOT NULL DEFAULT 'EASY',
+    author_name TEXT NOT NULL,
+    author_avatar TEXT,
+    is_favorite INTEGER NOT NULL DEFAULT 0,
+    is_synced INTEGER NOT NULL DEFAULT 0,
+    created_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL
+);
+
+-- 食材表
+CREATE TABLE IngredientEntity (
+    id TEXT PRIMARY KEY NOT NULL,
+    recipe_id TEXT NOT NULL,
+    name TEXT NOT NULL,
+    amount REAL NOT NULL,
+    unit TEXT NOT NULL,
+    FOREIGN KEY (recipe_id) REFERENCES RecipeEntity(id) ON DELETE CASCADE
+);
+
+-- 创建索引
+CREATE INDEX index_recipe_title ON RecipeEntity(title);
+CREATE INDEX index_recipe_favorite ON RecipeEntity(is_favorite);
+CREATE INDEX index_ingredient_recipe ON IngredientEntity(recipe_id);
+
+-- 查询所有食谱
+selectAll:
+SELECT * FROM RecipeEntity ORDER BY created_at DESC;
+
+-- 根据ID查询食谱
+selectById:
+SELECT * FROM RecipeEntity WHERE id = ?;
+
+-- 查询收藏的食谱
+selectFavorites:
+SELECT * FROM RecipeEntity WHERE is_favorite = 1 ORDER BY updated_at DESC;
+
+-- 搜索食谱
+searchByTitle:
+SELECT * FROM RecipeEntity WHERE title LIKE '%' || ? || '%' ORDER BY title;
+
+-- 插入食谱
+insertRecipe:
+INSERT INTO RecipeEntity (
+    id, title, description, image_url, cooking_time, servings, difficulty,
+    author_name, author_avatar, is_favorite, is_synced, created_at, updated_at
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+-- 更新食谱
+updateRecipe:
+UPDATE RecipeEntity SET
+    title = ?,
+    description = ?,
+    image_url = ?,
+    cooking_time = ?,
+    servings = ?,
+    difficulty = ?,
+    author_name = ?,
+    author_avatar = ?,
+    is_favorite = ?,
+    is_synced = ?,
+    updated_at = ?
+WHERE id = ?;
+
+-- 更新收藏状态
+toggleFavorite:
+UPDATE RecipeEntity SET is_favorite = ?, updated_at = ? WHERE id = ?;
+
+-- 删除食谱
+deleteById:
+DELETE FROM RecipeEntity WHERE id = ?;
+
+-- 查询食材
+selectIngredientsByRecipe:
+SELECT * FROM IngredientEntity WHERE recipe_id = ?;
+
+-- 插入食材
+insertIngredient:
+INSERT INTO IngredientEntity (id, recipe_id, name, amount, unit)
+VALUES (?, ?, ?, ?, ?);
+
+-- 删除食材
+deleteIngredientsByRecipe:
+DELETE FROM IngredientEntity WHERE recipe_id = ?;
+
+-- 获取未同步的食谱
+selectUnsynced:
+SELECT * FROM RecipeEntity WHERE is_synced = 0;
+
+-- 标记为已同步
+markAsSynced:
+UPDATE RecipeEntity SET is_synced = 1 WHERE id = ?;

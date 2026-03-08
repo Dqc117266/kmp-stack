@@ -8,6 +8,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import kotlin.coroutines.CoroutineContext
 
@@ -75,7 +76,7 @@ abstract class BaseDataSource<T : Transacter>(
      * @param block 事务中执行的操作
      */
     protected fun <R> transaction(block: Transacter.() -> R): R {
-        return database.transactionWithResult { block() }
+        return database.transactionWithResult { block(database) }
     }
 
     /**
@@ -84,7 +85,7 @@ abstract class BaseDataSource<T : Transacter>(
      * @param block 事务中执行的操作
      */
     protected fun transactionNoResult(block: Transacter.() -> Unit) {
-        database.transaction { block() }
+        database.transaction { block(database) }
     }
 }
 

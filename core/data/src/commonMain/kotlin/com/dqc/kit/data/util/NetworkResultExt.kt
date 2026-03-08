@@ -21,33 +21,37 @@ import io.ktor.http.isSuccess
  * @param block Ktor HTTP 请求块
  * @return DomainResult<T>
  */
-internal suspend inline fun <reified T> HttpClient.executeAndMap(
+suspend inline fun <reified T> HttpClient.executeAndMap(
     crossinline block: suspend HttpClient.() -> HttpResponse
 ): DomainResult<T> {
     return try {
         val response = block()
 
+        // 1. 先处理 HTTP 状态码
         if (!response.status.isSuccess()) {
-            return DomainResult.Error(
-                DomainError.NetworkError("HTTP ${response.status}")
-            )
+            return DomainResult.Error(DomainError.NetworkError("HTTP ${response.status.value}"))
         }
 
-        // 解析 BaseResponse
-        val baseResponse: BaseResponse<T> = response.body()
+        // 2. 尝试解析外层结构（捕获解析异常）
+        val baseResponse = try {
+            response.body<BaseResponse<T>>()
+        } catch (e: Exception) {
+            return DomainResult.Error(DomainError.ParseError("JSON 格式错误"))
+        }
 
+        // 3. 处理业务逻辑
         if (baseResponse.success) {
-            baseResponse.data?.let {
-                DomainResult.Success(it)
-            } ?: DomainResult.Error(
-                DomainError.Unknown(message = "Empty response data")
-            )
+            // 优化：针对 Unit 类型特殊处理，或允许 Null
+            val data = baseResponse.data
+            if (data == null && T::class != Unit::class) {
+                DomainResult.Error(DomainError.Unknown(message = "Success but null data"))
+            } else {
+                @Suppress("UNCHECKED_CAST")
+                DomainResult.Success(data as T)
+            }
         } else {
             DomainResult.Error(
-                ErrorMapper.mapBusinessCode(
-                    baseResponse.code,
-                    baseResponse.message
-                )
+                ErrorMapper.mapBusinessCode(baseResponse.code, baseResponse.message)
             )
         }
     } catch (e: Throwable) {
@@ -65,7 +69,7 @@ internal suspend inline fun <reified T> HttpClient.executeAndMap(
  * @param transform DTO 到实体的转换函数
  * @return DomainResult<T>
  */
-internal suspend inline fun <reified D, T> HttpClient.executeAndMapToDomain(
+suspend inline fun <reified D, T> HttpClient.executeAndMapToDomain(
     crossinline block: suspend HttpClient.() -> HttpResponse,
     crossinline transform: (D) -> T
 ): DomainResult<T> {
@@ -103,7 +107,7 @@ internal suspend inline fun <reified D, T> HttpClient.executeAndMapToDomain(
 /**
  * 执行无需返回值的 HTTP 请求 (如 DELETE, POST 无响应体)
  */
-internal suspend inline fun HttpClient.executeUnit(
+suspend inline fun HttpClient.executeUnit(
     crossinline block: suspend HttpClient.() -> HttpResponse
 ): DomainResult<Unit> {
     return try {
@@ -124,7 +128,7 @@ internal suspend inline fun HttpClient.executeUnit(
 /**
  * 执行请求并解析为 BaseResponse<Unit>
  */
-internal suspend inline fun HttpClient.executeBaseUnit(
+suspend inline fun HttpClient.executeBaseUnit(
     crossinline block: suspend HttpClient.() -> HttpResponse
 ): DomainResult<Unit> {
     return try {
@@ -149,7 +153,7 @@ internal suspend inline fun HttpClient.executeBaseUnit(
 /**
  * DomainResult 扩展：在成功时执行副作用（用于缓存等操作）
  */
-internal inline fun <T> DomainResult<T>.onSuccessSave(
+inline fun <T> DomainResult<T>.onSuccessSave(
     action: (T) -> Unit
 ): DomainResult<T> {
     if (this is DomainResult.Success) {

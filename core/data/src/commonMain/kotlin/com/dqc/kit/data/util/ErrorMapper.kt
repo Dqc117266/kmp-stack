@@ -1,18 +1,16 @@
 package com.dqc.kit.data.util
 
 import com.dqc.kit.domain.result.DomainError
-import io.ktor.client.call.body
 import io.ktor.client.network.sockets.SocketTimeoutException
 import io.ktor.client.plugins.ClientRequestException
 import io.ktor.client.plugins.ServerResponseException
 import io.ktor.http.HttpStatusCode
-import io.ktor.utils.io.errors.IOException
 
 /**
  * 网络异常映射器
  * 将底层网络异常映射为领域层错误类型
  */
-internal object ErrorMapper {
+object ErrorMapper {
 
     /**
      * 将 Throwable 映射为 DomainError
@@ -33,7 +31,7 @@ internal object ErrorMapper {
             )
 
             // IO 错误（无网络等）
-            is IOException -> DomainError.NetworkError(
+            is kotlinx.io.IOException -> DomainError.NetworkError(
                 message = "No internet connection"
             )
 
@@ -99,9 +97,9 @@ internal object ErrorMapper {
 }
 
 /**
-     * 安全执行挂起块，自动捕获并映射异常
-     */
-internal suspend inline fun <T> runCatchingNetwork(
+ * 安全执行挂起块，自动捕获并映射异常
+ */
+suspend inline fun <T> runCatchingNetwork(
     crossinline block: suspend () -> T
 ): Result<T> = try {
     Result.success(block())
@@ -113,4 +111,4 @@ internal suspend inline fun <T> runCatchingNetwork(
  * 网络异常包装器
  * 用于在 Result 中传递 DomainError
  */
-internal class NetworkException(val error: DomainError) : Exception(error.message)
+class NetworkException(val error: DomainError) : Exception(error.message)

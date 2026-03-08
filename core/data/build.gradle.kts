@@ -1,6 +1,5 @@
 plugins {
     id("com.dqc.kit.convention.kmp.library")
-    alias(libs.plugins.sqldelight)
 }
 
 kotlin {
@@ -12,62 +11,30 @@ kotlin {
             // Network layer - 处理 HTTP 通信
             api(projects.core.network)
 
-            // DataStore - 键值对存储
-            implementation(projects.core.datastore)
-
             // Common utilities
             implementation(projects.core.common)
 
             // Logging
             implementation(projects.core.logging)
 
-            // SQLDelight - 跨平台数据库
+            // SQLDelight - 跨平台数据库（仅提供运行时和扩展，不配置具体数据库）
             implementation(libs.sqldelight.runtime)
             implementation(libs.sqldelight.coroutines.extensions)
+
+            // Ktor - 网络请求客户端（core:data 提供的工具类需要）
+            implementation(libs.ktor.client.core)
+            implementation(libs.ktor.client.content.negotiation)
 
             // Coroutines
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.kotlinx.datetime)
-        }
-
-        androidMain.dependencies {
-            // SQLDelight Android driver
-            implementation(libs.sqldelight.android.driver)
-        }
-
-        jvmMain.dependencies {
-            // SQLDelight JVM driver (SQLite JDBC)
-            implementation(libs.sqldelight.sqlite.driver)
-        }
-
-        iosMain.dependencies {
-            // SQLDelight Native driver
-            implementation(libs.sqldelight.native.driver)
+            implementation(libs.kotlinx.serialization.json)
         }
 
         commonTest.dependencies {
             implementation(kotlin("test"))
             implementation(libs.kotlinx.coroutines.test)
             implementation(libs.koin.test)
-        }
-    }
-}
-
-// SQLDelight configuration
-sqldelight {
-    databases {
-        create("AppDatabase") {
-            // Database package
-            packageName.set("com.dqc.kit.data.local.database")
-
-            // Schema directory for migrations
-            schemaOutputDirectory.set(file("src/commonMain/sqldelight/databases"))
-
-            // Generated sources directory
-            deriveSchemaFromMigrations.set(false)
-
-            // Migration version
-            verifyMigrations.set(true)
         }
     }
 }

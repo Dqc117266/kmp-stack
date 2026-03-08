@@ -14,7 +14,7 @@ import kotlinx.serialization.Serializable
  * @property success 是否成功标志
  */
 @Serializable
-internal data class BaseResponse<T>(
+data class BaseResponse<T>(
     @SerialName("code")
     val code: Int = 0,
 
@@ -39,7 +39,7 @@ internal data class BaseResponse<T>(
  * @property hasMore 是否有更多数据
  */
 @Serializable
-internal data class PaginatedResponse<T>(
+data class PaginatedResponse<T>(
     @SerialName("list")
     val list: List<T> = emptyList(),
 
@@ -59,7 +59,7 @@ internal data class PaginatedResponse<T>(
 /**
  * 标准业务状态码定义
  */
-internal object ResponseCodes {
+object ResponseCodes {
     const val SUCCESS = 0
     const val ERROR_UNKNOWN = -1
     const val ERROR_NETWORK = -2

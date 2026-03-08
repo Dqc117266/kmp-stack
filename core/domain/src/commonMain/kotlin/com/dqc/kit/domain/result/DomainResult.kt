@@ -326,6 +326,13 @@ sealed class DomainError(open val message: String) {
         override val message: String = throwable?.message ?: "Unknown error"
     ) : DomainError(message)
 
+    /**
+     * 解析错误
+    */
+    data class ParseError(
+        override val message: String = "Parse error"
+    ) : DomainError(message)
+
     companion object {
         /**
          * 快速创建验证错误
