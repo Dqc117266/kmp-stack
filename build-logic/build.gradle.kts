@@ -78,5 +78,11 @@ gradlePlugin {
             id = "com.dqc.kit.convention.kmp.feature"
             implementationClass = "com.dqc.kit.KmpFeatureComposeConventionPlugin"
         }
+
+        // 注册桌面端外壳插件
+        register("kmpDesktopApp") {
+            id = "com.dqc.kit.convention.kmp.desktop.app" // 插件 ID
+            implementationClass = "com.dqc.kit.KmpDesktopAppConventionPlugin" // 对应的类名
+        }
     }
 }

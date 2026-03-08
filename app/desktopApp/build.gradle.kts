@@ -1,13 +1,15 @@
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 
 plugins {
-    id("com.dqc.kit.convention.kmp.application")
+    id("com.dqc.kit.convention.kmp.desktop.app")
 }
 
 kotlin {
     sourceSets {
-        getByName("jvmMain").dependencies {
-            implementation(compose.desktop.currentOs)
+        named("desktopMain") {
+            dependencies {
+                implementation(compose.desktop.currentOs)
+            }
         }
     }
 }
